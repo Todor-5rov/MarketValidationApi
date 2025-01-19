@@ -8,6 +8,7 @@ import stripe
 import Config.config
 from ModelInstructions.model_instructions import Instructions
 from Utils.utils import scrape_contact_info_parallel, get_businesses, fetch_sheet_data
+from google.cloud import translate
 
 stripe.api_key = Config.config.Config.STRIPE_SECRET_KEY
 
@@ -269,3 +270,30 @@ class ApiFunctions:
                 }, merge=True)
 
         return jsonify({"status": "success"}), 200
+
+
+
+    @staticmethod
+    def translate_to_english(text):
+        """
+        Translates Bulgarian text to English using Google Cloud Translation API.
+        :param text: str, input text in Bulgarian
+        :return: str, translated text in English
+        """
+        text = request.get_json()['text']
+        client = translate.Client()
+        result = client.translate(text, target_language='en', source_language='bg')
+        return result['translatedText']
+
+
+    @staticmethod
+    def translate_to_bulgarian(text):
+        """
+        Translates English text to Bulgarian using Google Cloud Translation API.
+        :param text: str, input text in English
+        :return: str, translated text in Bulgarian
+        """
+        text = request.get_json()['text']
+        client = translate.Client()
+        result = client.translate(text, target_language='bg', source_language='en')
+        return result['translatedText']

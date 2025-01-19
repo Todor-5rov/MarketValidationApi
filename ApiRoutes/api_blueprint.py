@@ -35,3 +35,11 @@ def feedback():
 @api_bp.route("/api/webhook", methods=["POST"])
 def webhook():
     return ApiFunctions.stripe_webhook(db)
+
+@api_bp.route("/api/translate_to_bg", methods=["POST"])
+def translate_to_bg():
+    return ApiFunctions.translate_to_bulgarian()
+
+@api_bp.route("/api/translate_to_en", methods=["POST"])
+def translate_to_en():
+    return ApiFunctions.translate_to_english()
