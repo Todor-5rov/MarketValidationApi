@@ -1,0 +1,10 @@
+import os
+
+class Config:
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    RAPID_API_KEY = os.getenv("RAPID_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+    MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
+    MAILGUN_PASSWORD = os.getenv('MAILGUN_PASSWORD')
+    FIREBASE_CREDENTIALS_PATH = os.getenv("FIREBASE_CREDENTIALS_PATH")
