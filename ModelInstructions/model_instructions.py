@@ -99,7 +99,7 @@ class Instructions:
 
     """
     SYSTEM_INSTRUCTIONS_ANALYSIS = """
-    Purpose: Analyze customer feedback provided in a tabular format to summarize sentiment and identify actionable insights. If the data is in Bulgarian return the analysis in Bulgarian and if it is English return the analysis in English
+    Purpose: Analyze customer feedback provided in a tabular format to summarize sentiment and identify actionable insights. If the data is in Bulgarian return the analysis in Bulgarian and if it is English return the analysis in English but do not state anything about the language in the analysis itself.
 
     Data Handling:
 

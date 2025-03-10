@@ -7,8 +7,8 @@ from email.mime.text import MIMEText
 import stripe
 import Config.config
 from ModelInstructions.model_instructions import Instructions
-from Utils.utils import scrape_contact_info_parallel, get_businesses, fetch_sheet_data
-from google.cloud import translate
+from utils.utils import scrape_contact_info_parallel, get_businesses, fetch_sheet_data
+from google.cloud import translate_v2 as translate
 
 stripe.api_key = Config.config.Config.STRIPE_SECRET_KEY
 
@@ -39,6 +39,7 @@ class ApiFunctions:
     def create_google_form():
         """Create a Google Form by calling the Google Apps Script web app."""
         data = request.json
+
         form_title = data.get("form_title")
         questions = data.get("questions")
 
@@ -50,8 +51,8 @@ class ApiFunctions:
 
         # Make the request to the Google Apps Script
         response = requests.post(url, json=payload)
-
         # Handle response
+        print(response.status_code)
         if response.status_code == 200:
             try:
                 # Extract the formUrl and spreadsheetUrl from the response
@@ -75,6 +76,9 @@ class ApiFunctions:
         data = request.json
         description = data.get("business_description")
 
+        if not description:  # Explicitly check if description is missing or empty
+            return None
+
         try:
             response = client.chat.completions.create(
                 model="gpt-4",
@@ -95,15 +99,24 @@ class ApiFunctions:
     def analyze_feedback(client):
         """
         Analyze product validation survey data and return actionable insights.
+
+        Args:
+            client: OpenAI client instance
+
+        Returns:
+            Tuple[Response, int]: Flask response object and status code
         """
         data = request.json
         spreadsheetId = data.get("spreadsheetId")
-        survey_data = fetch_sheet_data(spreadsheetId).to_string()
-
-        if not survey_data:
-            return jsonify({"error": "No survey data provided"}), 400
 
         try:
+            # Fetch and convert survey data
+            df = fetch_sheet_data(spreadsheetId)
+            if df.empty:
+                return jsonify({"error": "No survey data provided"}), 400
+
+            survey_data = df.to_string()
+
             # Call the OpenAI API to analyze the survey data
             response = client.chat.completions.create(
                 model="gpt-4",
@@ -116,7 +129,7 @@ class ApiFunctions:
 
             # Extract and return the content of the response
             insights = response.choices[0].message.content
-            return jsonify({"insights": insights})
+            return jsonify({"insights": insights}), 200  # Added status code 200
 
         except Exception as e:
             print(f"Error calling OpenAI API: {e}")
@@ -127,7 +140,7 @@ class ApiFunctions:
         data = request.json
         recipients = data.get("recipients")  # Expecting a list of email addresses
         form_url = data.get("formUrl")
-        recipients = "tochkatapetrov@gmail.com"
+        recipients = ["tochkatapetrov@gmail.com"]
         # Mailgun configuration
         mailgun_domain = os.getenv('MAILGUN_DOMAIN')
         mailgun_pwd = os.getenv('MAILGUN_PASSWORD')
@@ -219,28 +232,28 @@ class ApiFunctions:
     def feedback():
         data = request.json
         name = data.get('name')
-        email = "info@pro-val.net"
         message = data.get('message')
 
-        # Email content
+        if not name or not message:
+            return jsonify({"message": "Missing required fields"}), 400  # Return 400 for bad input
+
+        email = "info@pro-val.net"
         subject = "New Contact Form Submission"
         body = f"Name: {name}\nEmail: {email}\nMessage: {message}"
+
         mailgun_domain = os.getenv('MAILGUN_DOMAIN')
         mailgun_pwd = os.getenv('MAILGUN_PASSWORD')
         sender_email = f'info@{mailgun_domain}'
-        # Set up the MIME
+
         msg = MIMEMultipart()
         msg['From'] = sender_email
-        msg['To'] = "info@pro-val.net"  # Replace with your receiving email
+        msg['To'] = "info@pro-val.net"
         msg['Subject'] = subject
-
-        # Attach the body with the msg instance
         msg.attach(MIMEText(body, 'plain'))
 
         try:
-            # Establish SMTP connection
             with smtplib.SMTP('smtp.eu.mailgun.org', 587) as server:
-                server.starttls()  # Upgrade to secure connection
+                server.starttls()
                 server.login(sender_email, mailgun_pwd)
                 server.sendmail(sender_email, "info@pro-val.net", msg.as_string())
 
@@ -271,8 +284,6 @@ class ApiFunctions:
 
         return jsonify({"status": "success"}), 200
 
-
-
     @staticmethod
     def translate_to_english(text):
         """
@@ -283,8 +294,8 @@ class ApiFunctions:
         text = request.get_json()['text']
         client = translate.Client()
         result = client.translate(text, target_language='en', source_language='bg')
+        print(result['translatedText'])
         return result['translatedText']
-
 
     @staticmethod
     def translate_to_bulgarian(text):
@@ -296,4 +307,5 @@ class ApiFunctions:
         text = request.get_json()['text']
         client = translate.Client()
         result = client.translate(text, target_language='bg', source_language='en')
+        print(result['translatedText'])
         return result['translatedText']

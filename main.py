@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from openai import OpenAI
 import pandas as pd
-from ApiRoutes.api_blueprint import api_bp
+from api_routes.api_blueprint import api_bp
 #Add all libraries to requirements.txt
 
 from Config.config import Config

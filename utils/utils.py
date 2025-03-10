@@ -41,7 +41,7 @@ def get_businesses(query):
             'radius': 5000
         }
 
-        restaurants = []
+        busineses = []
         while True:
             response = requests.get(endpoint, params=params)
             if response.status_code == 200:
@@ -59,7 +59,7 @@ def get_businesses(query):
                         'address': address,
                         'website': website
                     }
-                    restaurants.append(restaurant_info['website'])
+                    busineses.append(restaurant_info['website'])
                 next_page_token = response.json().get('next_page_token')
                 if next_page_token:
                     time.sleep(2)  # Wait for the next page to be available
@@ -70,7 +70,7 @@ def get_businesses(query):
                 print(f"Error: Unable to fetch data. HTTP Status Code: {response.status_code}")
                 break
 
-        return restaurants
+        return busineses
 
 def scrape_contact_info(website_url):
         """Scrape emails from a given website using RapidAPI Email Scraper."""
@@ -81,7 +81,7 @@ def scrape_contact_info(website_url):
             "x-rapidapi-host": "website-social-scraper-api.p.rapidapi.com"
         }
 
-        retries = 1
+        retries = 2
         while retries > 0:
             response = requests.get(url, headers=headers, params=querystring)
 
